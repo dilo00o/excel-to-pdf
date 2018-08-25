@@ -44,12 +44,23 @@ public class App {
 		ExcelToHtmlConverter toHtml = ExcelToHtmlConverter.create(in, printWriter);
 		toHtml.setCompleteHTML(true);
 		toHtml.generateHtml();
-		File pdfDest = new File("./" + outFileName + ".pdf");
 		String outHtml = printWriter.toString();
+		// get rid of euro sign and encode it to html
 		outHtml = outHtml.replaceAll("â‚¬", "&#8364;").replaceAll("€", "&#8364;");
-		System.out.println(outHtml);
-		OutputStream os = new FileOutputStream(pdfDest);
-		HtmlConverter.convertToPdf(outHtml, os);
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		HtmlConverter.convertToPdf(outHtml, out);
+		FileOutputStream fos = null;
+		try { // just for testing
+			fos = new FileOutputStream(new File("./" + outFileName + ".pdf"));
+			out.writeTo(fos);
+		} catch (IOException ioe) {
+			// Handle exception here
+			ioe.printStackTrace();
+		} finally {
+			fos.close();
+		}
+//		DataHandler dataHandler = new DataHandler(out.toByteArray(), "application/pdf");
+// return this
 
 	}
 }
