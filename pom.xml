@@ -86,6 +86,7 @@
                 <directory>src/main/resources</directory>
                 <includes>
                     <include>*.xlsx</include>
+                    <include>*.pdf</include>
                     <include>*.css</include>
                 </includes>
             </resource>

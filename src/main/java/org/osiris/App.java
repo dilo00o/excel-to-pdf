@@ -1,7 +1,12 @@
 package org.osiris;
 
+import com.itextpdf.forms.PdfPageFormCopier;
+import com.itextpdf.html2pdf.ConverterProperties;
 import com.itextpdf.html2pdf.HtmlConverter;
 import com.itextpdf.kernel.geom.PageSize;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfReader;
+import com.itextpdf.kernel.pdf.PdfWriter;
 
 import java.io.*;
 import java.net.URL;
@@ -27,6 +32,7 @@ public class App {
 		} else {
 			try {
 				obj.getFile("xl.xlsx");
+//				obj.mergePdf("sample-merge.pdf");
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -39,28 +45,41 @@ public class App {
 
 	private void getFile(String fileName, String outFileName) throws IOException {
 		URL resource = getClass().getClassLoader().getResource(fileName);
-		File in = new File(resource.getFile());
-		StringWriter printWriter = new StringWriter();
-		ExcelToHtmlConverter toHtml = ExcelToHtmlConverter.create(in, printWriter);
-		toHtml.setCompleteHTML(true);
-		toHtml.generateHtml();
-		String outHtml = printWriter.toString();
-		// get rid of euro sign and encode it to html
-		outHtml = outHtml.replaceAll("â‚¬", "&#8364;").replaceAll("€", "&#8364;");
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		HtmlConverter.convertToPdf(outHtml, out);
-		FileOutputStream fos = null;
-		try { // just for testing
-			fos = new FileOutputStream(new File("./" + outFileName + ".pdf"));
-			out.writeTo(fos);
-		} catch (IOException ioe) {
-			// Handle exception here
-			ioe.printStackTrace();
-		} finally {
-			fos.close();
-		}
+		File in = null;
+		if (resource != null) {
+			in = new File(resource.getFile());
+			StringWriter printWriter = new StringWriter();
+			ExcelToHtmlConverter toHtml = ExcelToHtmlConverter.create(in, printWriter);
+			toHtml.setCompleteHTML(true);
+			toHtml.generateHtml();
+			String outHtml = printWriter.toString();
+			// get rid of euro sign and encode it to html
+			outHtml = outHtml.replaceAll("â‚¬", "&#8364;").replaceAll("€", "&#8364;");
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
+			ConverterProperties properties = new ConverterProperties();
+			properties.setCharset("UTF-8");
+			HtmlConverter.convertToPdf(outHtml, out, properties);
+			FileOutputStream fos = null;
+			try { // just for testing
+				fos = new FileOutputStream(new File("./" + outFileName + ".pdf"));
+				out.writeTo(fos);
+			} catch (IOException ioe) {
+				// Handle exception here
+				ioe.printStackTrace();
+			} finally {
+				fos.close();
+			}
 //		DataHandler dataHandler = new DataHandler(out.toByteArray(), "application/pdf");
 // return this
 
+		}
+	}
+
+	private void mergePdf(String dest) throws IOException {
+		PdfDocument pdfDoc = new PdfDocument(new PdfReader(getClass().getClassLoader().getResource("nnn.pdf").getFile()), new PdfWriter(dest));
+		PdfDocument cover = new PdfDocument(new PdfReader(getClass().getClassLoader().getResource("bazinga.pdf").getFile()));
+		cover.copyPagesTo(1, 1, pdfDoc, 1, new PdfPageFormCopier());
+		cover.close();
+		pdfDoc.close();
 	}
 }
