@@ -422,8 +422,8 @@ public class ToHtml {
 			Row row = rows.next();
 
 			out.format("  <tr>%n");
-			out.format("    <td class=\"%s\">%d</td>%n", ROW_HEAD_CLASS,
-					row.getRowNum() + 1);
+//			out.format("    <td class=\"%s\">%d</td>%n", ROW_HEAD_CLASS,
+//					row.getRowNum() + 1);
 			for (int i = firstColumn; i < endColumn; i++) {
 //				String content = "&nbsp;";
 				String content = "";

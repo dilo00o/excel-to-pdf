@@ -2,7 +2,6 @@ package org.osiris;
 
 import com.itextpdf.html2pdf.HtmlConverter;
 import com.itextpdf.kernel.geom.PageSize;
-import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 
 import java.io.*;
 import java.net.URL;
@@ -19,31 +18,38 @@ public class App {
 
 	public static void main(String[] args) {
 		App obj = new App();
-
-		try {
-//			obj.getFile("budget-breakdown.xlsx");
-			obj.getFile("report.xlsx");
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (InvalidFormatException e) {
-			e.printStackTrace();
+		if (args.length == 3) {
+			try {
+				obj.getFile(args[1], args[2]);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		} else {
+			try {
+				obj.getFile("xl.xlsx");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
-	private void getFile(String fileName) throws IOException, InvalidFormatException {
+	private void getFile(String fileName) throws IOException {
+		getFile(fileName, "bazinga");
+	}
 
-		// Creating a Workbook from an Excel file (.xls or .xlsx)
+	private void getFile(String fileName, String outFileName) throws IOException {
 		URL resource = getClass().getClassLoader().getResource(fileName);
 		File in = new File(resource.getFile());
-//		PrintWriter printWriter = new PrintWriter(new FileWriter("./bazinga.html"));
 		StringWriter printWriter = new StringWriter();
 		ExcelToHtmlConverter toHtml = ExcelToHtmlConverter.create(in, printWriter);
 		toHtml.setCompleteHTML(true);
 		toHtml.generateHtml();
-		File pdfDest = new File("./bazinga.pdf");
-
+		File pdfDest = new File("./" + outFileName + ".pdf");
+		String outHtml = printWriter.toString();
+		outHtml = outHtml.replaceAll("â‚¬", "&#8364;").replaceAll("€", "&#8364;");
+		System.out.println(outHtml);
 		OutputStream os = new FileOutputStream(pdfDest);
-		HtmlConverter.convertToPdf(printWriter.toString(), os);
+		HtmlConverter.convertToPdf(outHtml, os);
 
 	}
 }
