@@ -3,6 +3,8 @@ package org.osiris;
 import com.itextpdf.forms.PdfPageFormCopier;
 import com.itextpdf.html2pdf.ConverterProperties;
 import com.itextpdf.html2pdf.HtmlConverter;
+import com.itextpdf.html2pdf.css.media.MediaDeviceDescription;
+import com.itextpdf.html2pdf.css.media.MediaType;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfReader;
@@ -40,7 +42,7 @@ public class App {
 	}
 
 	private void getFile(String fileName) throws IOException {
-		getFile(fileName, "bazinga");
+		getFile(fileName, "sample_out");
 	}
 
 	private void getFile(String fileName, String outFileName) throws IOException {
@@ -56,9 +58,19 @@ public class App {
 			// get rid of euro sign and encode it to html
 			outHtml = outHtml.replaceAll("â‚¬", "&#8364;").replaceAll("€", "&#8364;");
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
+			PageSize pageSize = PageSize.A4.rotate();
+			PdfDocument pdfWriter = new PdfDocument(new PdfWriter(out));
+			pdfWriter.setDefaultPageSize(pageSize);
 			ConverterProperties properties = new ConverterProperties();
 			properties.setCharset("UTF-8");
-			HtmlConverter.convertToPdf(outHtml, out, properties);
+			MediaDeviceDescription mediaDeviceDescription
+					= new MediaDeviceDescription(MediaType.SCREEN);
+			mediaDeviceDescription.setWidth(pageSize.getWidth());
+			mediaDeviceDescription.setOrientation("landscape");
+			properties.setMediaDeviceDescription(mediaDeviceDescription);
+//			HtmlConverter.convertToPdf(outHtml, out, properties);
+			HtmlConverter.convertToPdf(outHtml, pdfWriter, properties);
+
 			FileOutputStream fos = null;
 			try { // just for testing
 				fos = new FileOutputStream(new File("./" + outFileName + ".pdf"));
