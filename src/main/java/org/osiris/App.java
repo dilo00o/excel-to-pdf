@@ -35,7 +35,7 @@ public class App {
         } else {
             try {
 //                obj.getFile("xl.xlsx");
-                obj.getFileNew("xl.xlsx", "putzo");
+                obj.getFileNew("report.xlsx", "smth");
 //				obj.mergePdf("sample-merge.pdf");
             } catch (IOException e) {
                 e.printStackTrace();
