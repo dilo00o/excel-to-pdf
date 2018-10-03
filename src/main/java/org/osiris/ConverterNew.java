@@ -85,6 +85,18 @@ public class ConverterNew {
                         argb[3], argb[0], argb[1], argb[2]);
                 style.append(coArgb);
             }
+            if (cellStyle.getFont() != null) {
+                if (cellStyle.getFont().getXSSFColor() != null) {
+                    byte[] fontRgb = cellStyle.getFont().getXSSFColor().getRGB();
+                    if (fontRgb != null) {
+                        String fontColor = String.format("  #%02x%02x%02x;%n", fontRgb[0], fontRgb[1], fontRgb[2]);
+                        style.append("color:").append(fontColor).append(";");
+                    }
+                }
+                if (cellStyle.getFont().getBold()) {
+                    style.append("font-weight:bold;");
+                }
+            }
         }
         if (cellStyle != null && cellStyle.getAlignmentEnum() != null) {
             switch (cellStyle.getAlignmentEnum()) {
@@ -168,47 +180,5 @@ public class ConverterNew {
             cellRangesPerRow.put(cellrange.getFirstRow(), ll);
         }
 
-    }
-
-    private class LocalCell {
-        private String value;
-        private int colSpan;
-        private String color;
-        private String fontBold;
-
-        public LocalCell() {
-        }
-
-        public String getValue() {
-            return value;
-        }
-
-        public void setValue(String value) {
-            this.value = value;
-        }
-
-        public int getColSpan() {
-            return colSpan;
-        }
-
-        public void setColSpan(int colSpan) {
-            this.colSpan = colSpan;
-        }
-
-        public String getColor() {
-            return color;
-        }
-
-        public void setColor(String color) {
-            this.color = color;
-        }
-
-        public String getFontBold() {
-            return fontBold;
-        }
-
-        public void setFontBold(String fontBold) {
-            this.fontBold = fontBold;
-        }
     }
 }
