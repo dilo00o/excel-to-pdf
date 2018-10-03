@@ -4,9 +4,8 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
-import org.apache.poi.xssf.usermodel.XSSFCell;
-import org.apache.poi.xssf.usermodel.XSSFFormulaEvaluator;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.ss.util.SheetUtil;
+import org.apache.poi.xssf.usermodel.*;
 import org.xhtmlrenderer.css.style.derived.StringValue;
 
 import java.io.File;
@@ -38,12 +37,20 @@ public class ConverterNew {
                             XSSFCell currCell = (XSSFCell) cellIterator.next();
                             if (isInMergedRegion(currCell, currMergedCells)) {
                                 if (currMergedCells.stream().anyMatch(item -> currCell.getColumnIndex() == item.getFirstColumn())) {
+//                                    System.out.println("cell: " + printCell(currCell, evaluator) + "  backgroundcolor: " + currCell.getCellStyle().getFillBackgroundXSSFColor());
+//                                    System.out.println("cell: " + printCell(currCell, evaluator) + "  font: " + currCell.getCellStyle().getFont().getXSSFColor());
                                     CellRangeAddress cc = currMergedCells.stream().filter(item -> currCell.getColumnIndex() == item.getFirstColumn()).findFirst().orElse(new CellRangeAddress(currCell.getRowIndex(), currCell.getRowIndex(), currCell.getColumnIndex(), currCell.getColumnIndex()));
-                                    builder.append("<td colspan=\"").append(cc.getLastColumn() - cc.getFirstColumn()).append("\">").append(printCell(currCell, evaluator)).append("</td>");
+                                    builder.append("<td ")
+                                            .append(getCellStyle(currCell))
+                                            .append("colspan=\"").append(cc.getLastColumn() - cc.getFirstColumn()).append("\">")
+                                            .append(printCell(currCell, evaluator)).append("</td>");
                                 }
 
                             } else { // single cell
-                                builder.append("<td> ").append(printCell(currCell, evaluator)).append("</td>");
+//                                System.out.println("cell: " + printCell(currCell, evaluator) + "  backgroundcolor: " + currCell.getCellStyle().getFillBackgroundColor());
+//                                System.out.println("cell: " + printCell(currCell, evaluator) + "  foreground: " + currCell.getCellStyle().getFillForegroundColor());
+                                builder.append("<td ");
+                                builder.append(getCellStyle(currCell)).append(">").append(printCell(currCell, evaluator)).append("</td>");
                             }
                         }
                         builder.append("</tr>");
@@ -57,6 +64,50 @@ public class ConverterNew {
         } catch (InvalidFormatException e) {
             e.printStackTrace();
         }
+    }
+
+    private static String getCellStyle(XSSFCell currCell) {
+        StringBuilder style = new StringBuilder();
+        style.append("style=\"");
+        XSSFCellStyle cellStyle = (XSSFCellStyle) currCell.getCellStyle();
+        if (cellStyle != null && cellStyle.getFillForegroundXSSFColor() != null) {
+            cellStyle.getFillBackgroundColor();
+//            System.out.println(cellStyle.getFillForegroundColor());
+
+            byte[] xfColorByte = cellStyle.getFillForegroundXSSFColor().getRGB();
+            if (xfColorByte != null) {
+                String coco = String.format("  #%02x%02x%02x;%n", xfColorByte[0], xfColorByte[1], xfColorByte[2]);
+                style.append("background-color:").append(coco).append(";");
+            }
+            byte[] argb = cellStyle.getFillForegroundXSSFColor().getARGB();
+            if (argb != null) {
+                String coArgb = String.format(" rgba(0x%02x, 0x%02x, 0x%02x, 0x%02x);",
+                        argb[3], argb[0], argb[1], argb[2]);
+                style.append(coArgb);
+            }
+        }
+        if (cellStyle != null && cellStyle.getAlignmentEnum() != null) {
+            switch (cellStyle.getAlignmentEnum()) {
+                case LEFT: {
+                    style.append("text-align:left;");
+                    break;
+                }
+                case RIGHT: {
+                    style.append("text-align:right;");
+                    break;
+                }
+                case CENTER: {
+                    style.append("text-align:center;");
+                    break;
+                }
+                default: {
+                    style.append("text-align:center;");
+                    break;
+                }
+            }
+        }
+        style.append("\" ");
+        return style.toString();
     }
 
     private static boolean isFirstInMergedRegion(XSSFCell currCell, List<CellRangeAddress> currMergedCells) {
