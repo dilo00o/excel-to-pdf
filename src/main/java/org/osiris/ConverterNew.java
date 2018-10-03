@@ -4,16 +4,18 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
-import org.apache.poi.ss.util.SheetUtil;
-import org.apache.poi.xssf.usermodel.*;
-import org.xhtmlrenderer.css.style.derived.StringValue;
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 
 public class ConverterNew {
-    public static void create(File in, String out) {
+    public static String create(File in) {
         StringBuilder builder = new StringBuilder();
         try {
             Workbook workbook = WorkbookFactory.create(in);
@@ -26,7 +28,8 @@ public class ConverterNew {
             CollectionUtils.emptyIfNull(cellRangeAddresses).forEach(cellrange -> addToMap(cellrange, cellRangesPerRow));
             if (sheet != null) {
                 Iterator<Row> rowIt = sheet.rowIterator();
-                builder.append("<table>");
+                createHtmlHeader(builder);
+                builder.append("<table style=\"border-collapse: collapse;\">");
                 while (rowIt.hasNext()) {
                     Row curRow = rowIt.next();
                     List<CellRangeAddress> currMergedCells = cellRangesPerRow.getOrDefault(curRow.getRowNum(), null);
@@ -37,8 +40,6 @@ public class ConverterNew {
                             XSSFCell currCell = (XSSFCell) cellIterator.next();
                             if (isInMergedRegion(currCell, currMergedCells)) {
                                 if (currMergedCells.stream().anyMatch(item -> currCell.getColumnIndex() == item.getFirstColumn())) {
-//                                    System.out.println("cell: " + printCell(currCell, evaluator) + "  backgroundcolor: " + currCell.getCellStyle().getFillBackgroundXSSFColor());
-//                                    System.out.println("cell: " + printCell(currCell, evaluator) + "  font: " + currCell.getCellStyle().getFont().getXSSFColor());
                                     CellRangeAddress cc = currMergedCells.stream().filter(item -> currCell.getColumnIndex() == item.getFirstColumn()).findFirst().orElse(new CellRangeAddress(currCell.getRowIndex(), currCell.getRowIndex(), currCell.getColumnIndex(), currCell.getColumnIndex()));
                                     builder.append("<td ")
                                             .append(getCellStyle(currCell))
@@ -47,8 +48,6 @@ public class ConverterNew {
                                 }
 
                             } else { // single cell
-//                                System.out.println("cell: " + printCell(currCell, evaluator) + "  backgroundcolor: " + currCell.getCellStyle().getFillBackgroundColor());
-//                                System.out.println("cell: " + printCell(currCell, evaluator) + "  foreground: " + currCell.getCellStyle().getFillForegroundColor());
                                 builder.append("<td ");
                                 builder.append(getCellStyle(currCell)).append(">").append(printCell(currCell, evaluator)).append("</td>");
                             }
@@ -58,17 +57,42 @@ public class ConverterNew {
                 }
                 builder.append("</table>");
             }
-            String ooo = builder.toString();
+            createHtmlEnd(builder);
+            return builder.toString();
         } catch (IOException e) {
             e.printStackTrace();
         } catch (InvalidFormatException e) {
             e.printStackTrace();
         }
+        return builder.toString();
+    }
+
+    private static void createHtmlEnd(StringBuilder builder) {
+        builder.append("</body>");
+        builder.append("</html>");
+        builder.append("</body>");
+        builder.append("</html>");
+    }
+
+    private static void createHtmlHeader(StringBuilder builder) {
+        builder.append("<!DOCTYPE html>");
+        builder.append("<html lang=\"en\">");
+        builder.append("<head>");
+        builder.append("<meta charset=\"UTF-8\">");
+        builder.append("<title>Report</title>");
+        builder.append("</head>");
+        builder.append("<body>");
+        builder.append("<!DOCTYPE html>");
+        builder.append("<html>");
+        builder.append("<head>");
+        builder.append("</head>");
+        builder.append("<body>");
+
     }
 
     private static String getCellStyle(XSSFCell currCell) {
         StringBuilder style = new StringBuilder();
-        style.append("style=\"");
+        style.append("style=\" ");
         XSSFCellStyle cellStyle = (XSSFCellStyle) currCell.getCellStyle();
         if (cellStyle != null && cellStyle.getFillForegroundXSSFColor() != null) {
             cellStyle.getFillBackgroundColor();

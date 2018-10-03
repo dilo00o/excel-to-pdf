@@ -35,7 +35,7 @@ public class App {
         } else {
             try {
 //                obj.getFile("xl.xlsx");
-                obj.getFileNew("report.xlsx", "smth");
+                obj.getFileNew("xl.xlsx", "smth");
 //				obj.mergePdf("sample-merge.pdf");
             } catch (IOException e) {
                 e.printStackTrace();
@@ -52,7 +52,30 @@ public class App {
         File in = null;
         if (resource != null) {
             in = new File(resource.getFile());
-            ConverterNew.create(in, new String());
+            String outHtml = ConverterNew.create(in);
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            PageSize pageSize = PageSize.A4.rotate();
+            PdfDocument pdfWriter = new PdfDocument(new PdfWriter(out));
+            pdfWriter.setDefaultPageSize(pageSize);
+            ConverterProperties properties = new ConverterProperties();
+            properties.setCharset("UTF-8");
+            MediaDeviceDescription mediaDeviceDescription
+                    = new MediaDeviceDescription(MediaType.SCREEN);
+            mediaDeviceDescription.setWidth(pageSize.getWidth());
+            mediaDeviceDescription.setOrientation("landscape");
+            properties.setMediaDeviceDescription(mediaDeviceDescription);
+            HtmlConverter.convertToPdf(outHtml, pdfWriter, properties);
+
+            FileOutputStream fos = null;
+            try { // just for testing
+                fos = new FileOutputStream(new File("./" + outFileName + ".pdf"));
+                out.writeTo(fos);
+            } catch (IOException ioe) {
+                // Handle exception here
+                ioe.printStackTrace();
+            } finally {
+                fos.close();
+            }
         }
     }
 
@@ -61,7 +84,7 @@ public class App {
         File in = null;
         if (resource != null) {
             in = new File(resource.getFile());
-            ConverterNew.create(in, new String());
+            ConverterNew.create(in);
             StringWriter printWriter = new StringWriter();
             ExcelToHtmlConverter toHtml = ExcelToHtmlConverter.create(in, printWriter);
             toHtml.setCompleteHTML(true);
@@ -80,7 +103,6 @@ public class App {
             mediaDeviceDescription.setWidth(pageSize.getWidth());
             mediaDeviceDescription.setOrientation("landscape");
             properties.setMediaDeviceDescription(mediaDeviceDescription);
-//			HtmlConverter.convertToPdf(outHtml, out, properties);
             HtmlConverter.convertToPdf(outHtml, pdfWriter, properties);
 
             FileOutputStream fos = null;
